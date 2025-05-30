@@ -1,10 +1,10 @@
-
 import React, { useState } from 'react';
+import { Link } from 'react-router-dom';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Palette, Download, Upload, RotateCcw } from 'lucide-react';
+import { Palette, Download, Upload, RotateCcw, ArrowLeft, Home } from 'lucide-react';
 import { useTheme } from '../../contexts/ThemeContext';
 import { useToast } from '@/hooks/use-toast';
 
@@ -92,6 +92,24 @@ const ThemeCustomizer: React.FC = () => {
 
   return (
     <div className="space-y-6 animate-fade-in">
+      {/* Navigation Header */}
+      <div className="flex items-center gap-4 mb-6">
+        <Link to="/">
+          <Button variant="outline" size="sm">
+            <ArrowLeft className="w-4 h-4 mr-2" />
+            Back to Dashboard
+          </Button>
+        </Link>
+        <div className="text-sm text-muted-foreground">
+          <Link to="/" className="hover:text-foreground transition-colors">
+            <Home className="w-4 h-4 inline mr-1" />
+            Dashboard
+          </Link>
+          <span className="mx-2">/</span>
+          <span>Theme Customizer</span>
+        </div>
+      </div>
+
       <div className="flex justify-between items-center">
         <div>
           <h1 className="text-4xl font-bold text-foreground mb-2">Theme Customizer</h1>
