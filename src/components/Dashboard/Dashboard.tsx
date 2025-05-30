@@ -23,6 +23,8 @@ const Dashboard: React.FC = () => {
   const { insights, isAnalyzing } = useAI();
   const { isAuthenticated, selectedRepos, user } = useGitHub();
   const [activeTab, setActiveTab] = useState('overview');
+  const [showAuthOverlay, setShowAuthOverlay] = useState(false);
+  const [authTrigger, setAuthTrigger] = useState<string>('');
 
   // Demo data for unauthenticated users
   const demoData = {
@@ -42,10 +44,29 @@ const Dashboard: React.FC = () => {
   const totalVulnerabilities = Object.values(displayData.vulnerabilities).reduce((a, b) => a + b, 0);
   const criticalIssues = displayData.vulnerabilities.critical + displayData.vulnerabilities.high;
 
+  const handleAuthRequiredAction = (actionName: string) => {
+    if (!isAuthenticated) {
+      setAuthTrigger(actionName);
+      setShowAuthOverlay(true);
+      return false;
+    }
+    return true;
+  };
+
+  const handleDismissOverlay = () => {
+    setShowAuthOverlay(false);
+    setAuthTrigger('');
+  };
+
   return (
     <div className="space-y-6 animate-fade-in relative">
-      {/* Demo Overlay for unauthenticated users */}
-      {!isAuthenticated && <DemoOverlay />}
+      {/* Demo Overlay for specific actions */}
+      {showAuthOverlay && !isAuthenticated && (
+        <DemoOverlay 
+          onDismiss={handleDismissOverlay}
+          trigger={authTrigger}
+        />
+      )}
 
       {/* Header */}
       <div className="flex justify-between items-center mb-8">
@@ -64,13 +85,22 @@ const Dashboard: React.FC = () => {
           </p>
         </div>
         <div className="flex gap-2">
-          {isAuthenticated && (
+          {isAuthenticated ? (
             <Link to="/github">
               <Button variant="outline" size="sm">
                 <Github className="w-4 h-4 mr-2" />
                 GitHub Integration
               </Button>
             </Link>
+          ) : (
+            <Button 
+              variant="outline" 
+              size="sm"
+              onClick={() => handleAuthRequiredAction('access GitHub integration')}
+            >
+              <Github className="w-4 h-4 mr-2" />
+              GitHub Integration
+            </Button>
           )}
           <Link to="/themes">
             <Button variant="outline" size="sm">
@@ -83,7 +113,7 @@ const Dashboard: React.FC = () => {
 
       {/* Quick Status Overview */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
-        <Card className={`panel hover:scale-105 transition-all ${!isAuthenticated ? 'opacity-75' : ''}`}>
+        <Card className="panel hover:scale-105 transition-all">
           <CardContent className="p-4">
             <div className="flex items-center justify-between">
               <div>
@@ -102,7 +132,7 @@ const Dashboard: React.FC = () => {
           </CardContent>
         </Card>
 
-        <Card className={`panel hover:scale-105 transition-all ${!isAuthenticated ? 'opacity-75' : ''}`}>
+        <Card className="panel hover:scale-105 transition-all">
           <CardContent className="p-4">
             <div className="flex items-center justify-between">
               <div>
@@ -116,7 +146,7 @@ const Dashboard: React.FC = () => {
           </CardContent>
         </Card>
 
-        <Card className={`panel hover:scale-105 transition-all ${!isAuthenticated ? 'opacity-75' : ''}`}>
+        <Card className="panel hover:scale-105 transition-all">
           <CardContent className="p-4">
             <div className="flex items-center justify-between">
               <div>
@@ -130,7 +160,7 @@ const Dashboard: React.FC = () => {
           </CardContent>
         </Card>
 
-        <Card className={`panel hover:scale-105 transition-all ${!isAuthenticated ? 'opacity-75' : ''}`}>
+        <Card className="panel hover:scale-105 transition-all">
           <CardContent className="p-4">
             <div className="flex items-center justify-between">
               <div>
@@ -172,7 +202,7 @@ const Dashboard: React.FC = () => {
             <SecurityStatusCard />
             <MaintenanceStatusCard />
             <AIInsightsCard />
-            <QuickActions />
+            <QuickActions onAuthRequired={handleAuthRequiredAction} />
           </div>
         </TabsContent>
 
@@ -192,7 +222,7 @@ const Dashboard: React.FC = () => {
       {/* Navigation Links */}
       <div className="grid grid-cols-2 md:grid-cols-5 gap-4 mt-8">
         <Link to="/security" className="block">
-          <Card className={`panel hover:scale-105 transition-all cursor-pointer ${!isAuthenticated ? 'opacity-75' : ''}`}>
+          <Card className="panel hover:scale-105 transition-all cursor-pointer">
             <CardContent className="p-6 text-center">
               <Shield className="w-12 h-12 text-primary mx-auto mb-4" />
               <h3 className="text-lg font-semibold text-foreground">Security Center</h3>
@@ -202,7 +232,7 @@ const Dashboard: React.FC = () => {
         </Link>
 
         <Link to="/maintenance" className="block">
-          <Card className={`panel hover:scale-105 transition-all cursor-pointer ${!isAuthenticated ? 'opacity-75' : ''}`}>
+          <Card className="panel hover:scale-105 transition-all cursor-pointer">
             <CardContent className="p-6 text-center">
               <Wrench className="w-12 h-12 text-primary mx-auto mb-4" />
               <h3 className="text-lg font-semibold text-foreground">Maintenance</h3>
@@ -212,7 +242,7 @@ const Dashboard: React.FC = () => {
         </Link>
 
         <Link to="/ai-insights" className="block">
-          <Card className={`panel hover:scale-105 transition-all cursor-pointer ${!isAuthenticated ? 'opacity-75' : ''}`}>
+          <Card className="panel hover:scale-105 transition-all cursor-pointer">
             <CardContent className="p-6 text-center">
               <Brain className="w-12 h-12 text-primary mx-auto mb-4" />
               <h3 className="text-lg font-semibold text-foreground">AI Insights</h3>
@@ -221,18 +251,31 @@ const Dashboard: React.FC = () => {
           </Card>
         </Link>
 
-        <Link to="/github" className="block">
-          <Card className={`panel hover:scale-105 transition-all cursor-pointer ${!isAuthenticated ? 'opacity-75' : ''}`}>
+        {isAuthenticated ? (
+          <Link to="/github" className="block">
+            <Card className="panel hover:scale-105 transition-all cursor-pointer">
+              <CardContent className="p-6 text-center">
+                <Github className="w-12 h-12 text-primary mx-auto mb-4" />
+                <h3 className="text-lg font-semibold text-foreground">GitHub</h3>
+                <p className="text-sm text-muted-foreground">Repository integration</p>
+              </CardContent>
+            </Card>
+          </Link>
+        ) : (
+          <Card 
+            className="panel hover:scale-105 transition-all cursor-pointer"
+            onClick={() => handleAuthRequiredAction('access GitHub integration')}
+          >
             <CardContent className="p-6 text-center">
               <Github className="w-12 h-12 text-primary mx-auto mb-4" />
               <h3 className="text-lg font-semibold text-foreground">GitHub</h3>
               <p className="text-sm text-muted-foreground">Repository integration</p>
             </CardContent>
           </Card>
-        </Link>
+        )}
 
         <Link to="/knowledge" className="block">
-          <Card className={`panel hover:scale-105 transition-all cursor-pointer ${!isAuthenticated ? 'opacity-75' : ''}`}>
+          <Card className="panel hover:scale-105 transition-all cursor-pointer">
             <CardContent className="p-6 text-center">
               <Book className="w-12 h-12 text-primary mx-auto mb-4" />
               <h3 className="text-lg font-semibold text-foreground">Knowledge Base</h3>

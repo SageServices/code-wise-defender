@@ -5,14 +5,25 @@ import { Button } from '@/components/ui/button';
 import { Shield, Wrench, Brain, Zap, Download, Settings } from 'lucide-react';
 import { useSecurity } from '../../contexts/SecurityContext';
 import { useAI } from '../../contexts/AIContext';
+import { useGitHub } from '../../contexts/GitHubContext';
 import { useToast } from '@/hooks/use-toast';
 
-const QuickActions: React.FC = () => {
+interface QuickActionsProps {
+  onAuthRequired?: (actionName: string) => void;
+}
+
+const QuickActions: React.FC<QuickActionsProps> = ({ onAuthRequired }) => {
   const { runVulnerabilityScan, updateDependencies } = useSecurity();
   const { generateInsights } = useAI();
+  const { isAuthenticated } = useGitHub();
   const { toast } = useToast();
 
   const handleQuickScan = async () => {
+    if (!isAuthenticated && onAuthRequired) {
+      onAuthRequired('run security scans');
+      return;
+    }
+
     try {
       await runVulnerabilityScan(window.location.origin);
       toast({
@@ -29,6 +40,11 @@ const QuickActions: React.FC = () => {
   };
 
   const handleQuickMaintenance = async () => {
+    if (!isAuthenticated && onAuthRequired) {
+      onAuthRequired('perform maintenance tasks');
+      return;
+    }
+
     try {
       await updateDependencies();
       toast({
@@ -45,6 +61,11 @@ const QuickActions: React.FC = () => {
   };
 
   const handleGenerateInsights = async () => {
+    if (!isAuthenticated && onAuthRequired) {
+      onAuthRequired('generate AI insights');
+      return;
+    }
+
     try {
       await generateInsights();
       toast({
@@ -61,19 +82,21 @@ const QuickActions: React.FC = () => {
   };
 
   const downloadDashboardData = () => {
+    // This action works in demo mode
     const data = {
       timestamp: new Date().toISOString(),
+      mode: isAuthenticated ? 'authenticated' : 'demo',
       security: {
         lastScan: new Date().toLocaleDateString(),
-        vulnerabilities: "0 critical, 2 high, 5 medium, 12 low"
+        vulnerabilities: isAuthenticated ? "Real data" : "0 critical, 2 high, 5 medium, 12 low (demo)"
       },
       maintenance: {
-        systemHealth: "92%",
-        pendingUpdates: 8,
+        systemHealth: isAuthenticated ? "Real data" : "92% (demo)",
+        pendingUpdates: isAuthenticated ? "Real data" : "8 (demo)",
         lastMaintenance: "2 hours ago"
       },
       ai: {
-        insights: "2 new insights available",
+        insights: isAuthenticated ? "Real data" : "2 new insights available (demo)",
         confidence: "High accuracy analysis"
       }
     };
@@ -90,7 +113,7 @@ const QuickActions: React.FC = () => {
 
     toast({
       title: "Data Exported",
-      description: "Dashboard data has been downloaded.",
+      description: `Dashboard data has been downloaded${!isAuthenticated ? ' (demo data)' : ''}.`,
     });
   };
 
@@ -107,16 +130,19 @@ const QuickActions: React.FC = () => {
           <Button onClick={handleQuickScan} className="w-full justify-start">
             <Shield className="w-4 h-4 mr-2" />
             Run Security Scan
+            {!isAuthenticated && <span className="ml-auto text-xs opacity-70">Demo</span>}
           </Button>
           
           <Button onClick={handleQuickMaintenance} className="w-full justify-start" variant="outline">
             <Wrench className="w-4 h-4 mr-2" />
             Update Dependencies
+            {!isAuthenticated && <span className="ml-auto text-xs opacity-70">Demo</span>}
           </Button>
           
           <Button onClick={handleGenerateInsights} className="w-full justify-start" variant="outline">
             <Brain className="w-4 h-4 mr-2" />
             Generate AI Insights
+            {!isAuthenticated && <span className="ml-auto text-xs opacity-70">Demo</span>}
           </Button>
           
           <Button onClick={downloadDashboardData} className="w-full justify-start" variant="outline">
