@@ -3,9 +3,10 @@ import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Github, Shield, GitBranch, Settings } from 'lucide-react';
-import GitHubAuth from './GitHubAuth';
+import GitHubAuthFlow from '../Auth/GitHubAuthFlow';
 import RepositorySelector from './RepositorySelector';
 import RepositoryScanner from './RepositoryScanner';
+import IgnoreListManager from './IgnoreListManager';
 import { useGitHub } from '../../contexts/GitHubContext';
 
 const GitHubDashboard: React.FC = () => {
@@ -24,7 +25,7 @@ const GitHubDashboard: React.FC = () => {
           </div>
         </div>
         <div className="max-w-md mx-auto">
-          <GitHubAuth />
+          <GitHubAuthFlow />
         </div>
       </div>
     );
@@ -51,7 +52,7 @@ const GitHubDashboard: React.FC = () => {
 
         <TabsContent value="overview" className="space-y-4">
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-            <GitHubAuth />
+            <GitHubAuthFlow />
             <Card className="panel">
               <CardHeader>
                 <CardTitle className="flex items-center gap-2">
@@ -89,8 +90,9 @@ const GitHubDashboard: React.FC = () => {
 
         <TabsContent value="settings">
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-            <GitHubAuth />
-            <Card className="panel">
+            <GitHubAuthFlow />
+            <IgnoreListManager />
+            <Card className="panel lg:col-span-2">
               <CardHeader>
                 <CardTitle className="flex items-center gap-2">
                   <Settings className="w-5 h-5" />
@@ -98,14 +100,25 @@ const GitHubDashboard: React.FC = () => {
                 </CardTitle>
               </CardHeader>
               <CardContent className="space-y-4">
-                <div className="space-y-2">
-                  <label className="text-sm font-medium">Scan Frequency</label>
-                  <select className="w-full p-2 border rounded">
-                    <option>Every 6 hours</option>
-                    <option>Daily</option>
-                    <option>Weekly</option>
-                    <option>Manual only</option>
-                  </select>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <label className="text-sm font-medium">Scan Frequency</label>
+                    <select className="w-full p-2 border rounded">
+                      <option>Every 6 hours</option>
+                      <option>Daily</option>
+                      <option>Weekly</option>
+                      <option>Manual only</option>
+                    </select>
+                  </div>
+                  <div className="space-y-2">
+                    <label className="text-sm font-medium">Notification Preferences</label>
+                    <select className="w-full p-2 border rounded">
+                      <option>All vulnerabilities</option>
+                      <option>Critical only</option>
+                      <option>High & Critical</option>
+                      <option>Disabled</option>
+                    </select>
+                  </div>
                 </div>
                 <div className="space-y-2">
                   <label className="text-sm font-medium">Auto-Fix Settings</label>

@@ -53,8 +53,12 @@ export const GitHubProvider: React.FC<{ children: ReactNode }> = ({ children }) 
 
   useEffect(() => {
     const token = localStorage.getItem('github_token');
+    const savedAccessLevel = localStorage.getItem('github_access_level') as 'read' | 'write' | null;
     if (token) {
       initializeOctokit(token);
+      if (savedAccessLevel) {
+        setAccessLevel(savedAccessLevel);
+      }
     }
   }, []);
 
@@ -69,12 +73,14 @@ export const GitHubProvider: React.FC<{ children: ReactNode }> = ({ children }) 
       
       const { data: reposData } = await octokitInstance.rest.repos.listForAuthenticatedUser({
         per_page: 100,
-        sort: 'updated'
+        sort: 'updated',
+        affiliation: 'owner,collaborator'
       });
       setRepositories(reposData as Repository[]);
     } catch (err) {
       setError('Failed to authenticate with GitHub');
       localStorage.removeItem('github_token');
+      localStorage.removeItem('github_access_level');
     }
   };
 
@@ -83,15 +89,22 @@ export const GitHubProvider: React.FC<{ children: ReactNode }> = ({ children }) 
     setError(null);
     
     try {
-      // In a real implementation, this would use OAuth flow
-      // For now, we'll simulate with a prompt for personal access token
-      const token = prompt('Enter your GitHub Personal Access Token:');
+      // Simulate proper OAuth flow with better UX
+      const token = prompt(
+        'For demo purposes, please enter your GitHub Personal Access Token.\n\n' +
+        'In production, this would use secure OAuth flow.\n\n' +
+        'Generate a token at: https://github.com/settings/tokens\n' +
+        'Required scopes: repo, read:user'
+      );
+      
       if (token) {
         localStorage.setItem('github_token', token);
         await initializeOctokit(token);
+      } else {
+        setError('Authentication cancelled');
       }
     } catch (err) {
-      setError('Authentication failed');
+      setError('Authentication failed. Please check your token and try again.');
     } finally {
       setIsLoading(false);
     }
@@ -99,12 +112,14 @@ export const GitHubProvider: React.FC<{ children: ReactNode }> = ({ children }) 
 
   const logout = () => {
     localStorage.removeItem('github_token');
+    localStorage.removeItem('github_access_level');
     setUser(null);
     setRepositories([]);
     setSelectedRepos([]);
     setAccessLevel(null);
     setIsAuthenticated(false);
     setOctokit(null);
+    setError(null);
   };
 
   const selectRepository = (repoId: string) => {
@@ -115,26 +130,41 @@ export const GitHubProvider: React.FC<{ children: ReactNode }> = ({ children }) 
     setSelectedRepos(prev => prev.filter(id => id !== repoId));
   };
 
+  const handleSetAccessLevel = (level: 'read' | 'write') => {
+    setAccessLevel(level);
+    localStorage.setItem('github_access_level', level);
+  };
+
   const scanRepository = async (repoName: string) => {
     if (!octokit) throw new Error('Not authenticated');
     
     try {
       const [owner, repo] = repoName.split('/');
-      const { data: contents } = await octokit.rest.repos.getContent({
-        owner,
-        repo,
-        path: ''
-      });
       
-      // Simulate security scan
+      // Verify ownership/access before scanning
+      const { data: repoData } = await octokit.rest.repos.get({ owner, repo });
+      if (!repoData.permissions?.pull) {
+        throw new Error('Insufficient permissions to scan this repository');
+      }
+      
+      // Simulate comprehensive security scan
+      const vulnerabilities = Math.floor(Math.random() * 15);
+      const dependencies = Math.floor(Math.random() * 80) + 20;
+      const codeQuality = Math.floor(Math.random() * 30) + 70;
+      
       return {
-        vulnerabilities: Math.floor(Math.random() * 10),
-        dependencies: Math.floor(Math.random() * 50),
-        codeQuality: Math.floor(Math.random() * 100),
-        lastScan: new Date().toISOString()
+        vulnerabilities,
+        dependencies,
+        codeQuality,
+        lastScan: new Date().toISOString(),
+        issues: [
+          { type: 'security', severity: 'high', description: 'Outdated dependency with known CVE' },
+          { type: 'quality', severity: 'medium', description: 'Code complexity exceeds threshold' },
+          { type: 'security', severity: 'low', description: 'Missing security headers' }
+        ]
       };
     } catch (err) {
-      throw new Error('Failed to scan repository');
+      throw new Error(`Failed to scan repository: ${err instanceof Error ? err.message : 'Unknown error'}`);
     }
   };
 
@@ -145,6 +175,12 @@ export const GitHubProvider: React.FC<{ children: ReactNode }> = ({ children }) 
     
     try {
       const [owner, repo] = repoName.split('/');
+      
+      // Verify write permissions
+      const { data: repoData } = await octokit.rest.repos.get({ owner, repo });
+      if (!repoData.permissions?.push) {
+        throw new Error('Insufficient permissions to create fixes for this repository');
+      }
       
       // Create a new branch for the fix
       const branchName = `security-fix-${Date.now()}`;
@@ -161,19 +197,22 @@ export const GitHubProvider: React.FC<{ children: ReactNode }> = ({ children }) 
         sha: ref.object.sha
       });
       
+      // Simulate creating files while respecting ignore list
+      // In real implementation, this would check against user's ignore patterns
+      
       // Create pull request with fix
       const { data: pr } = await octokit.rest.pulls.create({
         owner,
         repo,
-        title: `Security Fix: ${fix.title}`,
+        title: `🔒 Security Fix: ${fix.title}`,
         head: branchName,
         base: 'main',
-        body: `Automated security fix:\n\n${fix.description}`
+        body: `## Automated Security Fix\n\n${fix.description}\n\n---\n\n*This PR was created automatically by the Security Platform. Please review changes before merging.*`
       });
       
       return pr;
     } catch (err) {
-      throw new Error('Failed to create auto-fix');
+      throw new Error(`Failed to create auto-fix: ${err instanceof Error ? err.message : 'Unknown error'}`);
     }
   };
 
@@ -190,7 +229,7 @@ export const GitHubProvider: React.FC<{ children: ReactNode }> = ({ children }) 
       logout,
       selectRepository,
       unselectRepository,
-      setAccessLevel,
+      setAccessLevel: handleSetAccessLevel,
       scanRepository,
       createAutoFix
     }}>
