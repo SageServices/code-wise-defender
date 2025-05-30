@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
@@ -8,6 +7,7 @@ import RepositorySelector from './RepositorySelector';
 import RepositoryScanner from './RepositoryScanner';
 import IgnoreListManager from './IgnoreListManager';
 import { useGitHub } from '../../contexts/GitHubContext';
+import BackupManager from '../Backup/BackupManager';
 
 const GitHubDashboard: React.FC = () => {
   const { isAuthenticated } = useGitHub();
@@ -43,10 +43,11 @@ const GitHubDashboard: React.FC = () => {
       </div>
 
       <Tabs defaultValue="overview" className="space-y-4">
-        <TabsList className="grid w-full grid-cols-4">
+        <TabsList className="grid w-full grid-cols-5">
           <TabsTrigger value="overview">Overview</TabsTrigger>
           <TabsTrigger value="repositories">Repositories</TabsTrigger>
           <TabsTrigger value="scanner">Scanner</TabsTrigger>
+          <TabsTrigger value="backup">Backup</TabsTrigger>
           <TabsTrigger value="settings">Settings</TabsTrigger>
         </TabsList>
 
@@ -86,6 +87,10 @@ const GitHubDashboard: React.FC = () => {
 
         <TabsContent value="scanner">
           <RepositoryScanner />
+        </TabsContent>
+
+        <TabsContent value="backup">
+          <BackupManager />
         </TabsContent>
 
         <TabsContent value="settings">

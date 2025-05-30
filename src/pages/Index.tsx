@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { Routes, Route } from 'react-router-dom';
 import Dashboard from '../components/Dashboard/Dashboard';
@@ -12,12 +11,14 @@ import BackgroundEffects from '../components/Effects/BackgroundEffects';
 import { ThemeProvider } from '../contexts/ThemeContext';
 import { SecurityProvider } from '../contexts/SecurityContext';
 import { AIProvider } from '../contexts/AIContext';
+import BackupContextBridge from '../components/Backup/BackupContextBridge';
 
 const Index = () => {
   return (
     <ThemeProvider>
       <SecurityProvider>
         <AIProvider>
+          <BackupContextBridge />
           <div className="min-h-screen bg-gradient-to-b from-background via-secondary to-black relative overflow-hidden">
             <BackgroundEffects />
             <div className="absolute inset-0 grid-bg opacity-10"></div>

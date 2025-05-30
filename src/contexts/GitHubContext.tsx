@@ -1,4 +1,3 @@
-
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
 import { Octokit } from '@octokit/rest';
 
@@ -131,8 +130,19 @@ export const GitHubProvider: React.FC<{ children: ReactNode }> = ({ children }) 
   };
 
   const handleSetAccessLevel = (level: 'read' | 'write') => {
+    const previousLevel = accessLevel;
     setAccessLevel(level);
     localStorage.setItem('github_access_level', level);
+    
+    // Log the permission change
+    if (window.backupContext) {
+      window.backupContext.addChangeLog({
+        action: 'permission-change',
+        details: `Access level changed from ${previousLevel || 'none'} to ${level}`,
+        beforeState: { accessLevel: previousLevel },
+        afterState: { accessLevel: level }
+      });
+    }
   };
 
   const scanRepository = async (repoName: string) => {
@@ -145,6 +155,17 @@ export const GitHubProvider: React.FC<{ children: ReactNode }> = ({ children }) 
       const { data: repoData } = await octokit.rest.repos.get({ owner, repo });
       if (!repoData.permissions?.pull) {
         throw new Error('Insufficient permissions to scan this repository');
+      }
+      
+      // Log the scan action
+      if (window.backupContext) {
+        window.backupContext.addChangeLog({
+          action: 'scan',
+          repository: repoName,
+          details: `Scanned repository for vulnerabilities and dependencies`,
+          beforeState: { action: 'scan_start' },
+          afterState: { action: 'scan_complete', repository: repoName }
+        });
       }
       
       // Simulate comprehensive security scan
@@ -181,6 +202,17 @@ export const GitHubProvider: React.FC<{ children: ReactNode }> = ({ children }) 
       if (!repoData.permissions?.push) {
         throw new Error('Insufficient permissions to create fixes for this repository');
       }
+
+      // Log the auto-fix action
+      if (window.backupContext) {
+        window.backupContext.addChangeLog({
+          action: 'auto-fix',
+          repository: repoName,
+          details: `Created automated security fix: ${fix.title}`,
+          beforeState: { repository: repoName, issues: fix.issues },
+          afterState: { repository: repoName, fix: fix.title, status: 'pr_created' }
+        });
+      }
       
       // Create a new branch for the fix
       const branchName = `security-fix-${Date.now()}`;
@@ -196,9 +228,6 @@ export const GitHubProvider: React.FC<{ children: ReactNode }> = ({ children }) 
         ref: `refs/heads/${branchName}`,
         sha: ref.object.sha
       });
-      
-      // Simulate creating files while respecting ignore list
-      // In real implementation, this would check against user's ignore patterns
       
       // Create pull request with fix
       const { data: pr } = await octokit.rest.pulls.create({
