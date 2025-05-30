@@ -7,6 +7,7 @@ import MaintenancePanel from '../components/Maintenance/MaintenancePanel';
 import AIInsights from '../components/AI/AIInsights';
 import KnowledgeBase from '../components/KnowledgeBase/KnowledgeBase';
 import ThemeCustomizer from '../components/Theme/ThemeCustomizer';
+import GitHubDashboard from '../components/GitHub/GitHubDashboard';
 import BackgroundEffects from '../components/Effects/BackgroundEffects';
 import { ThemeProvider } from '../contexts/ThemeContext';
 import { SecurityProvider } from '../contexts/SecurityContext';
@@ -33,6 +34,7 @@ const Index = () => {
                 <Route path="/ai-insights" element={<AIInsights />} />
                 <Route path="/knowledge" element={<KnowledgeBase />} />
                 <Route path="/themes" element={<ThemeCustomizer />} />
+                <Route path="/github" element={<GitHubDashboard />} />
               </Routes>
             </div>
             

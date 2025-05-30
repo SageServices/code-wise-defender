@@ -5,18 +5,21 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Shield, Wrench, Brain, Book, Palette, AlertTriangle, CheckCircle, Clock, TrendingUp } from 'lucide-react';
+import { Shield, Wrench, Brain, Book, Palette, AlertTriangle, CheckCircle, Clock, TrendingUp, Github } from 'lucide-react';
 import { useSecurity } from '../../contexts/SecurityContext';
 import { useAI } from '../../contexts/AIContext';
+import { useGitHub } from '../../contexts/GitHubContext';
 import SecurityStatusCard from '../Security/SecurityStatusCard';
 import MaintenanceStatusCard from '../Maintenance/MaintenanceStatusCard';
 import AIInsightsCard from '../AI/AIInsightsCard';
 import AdPlacementBanner from '../Ads/AdPlacementBanner';
 import QuickActions from './QuickActions';
+import InstallPWA from '../PWA/InstallPWA';
 
 const Dashboard: React.FC = () => {
   const { status: securityStatus } = useSecurity();
   const { insights, isAnalyzing } = useAI();
+  const { isAuthenticated: isGitHubConnected, selectedRepos } = useGitHub();
   const [activeTab, setActiveTab] = useState('overview');
 
   const totalVulnerabilities = Object.values(securityStatus.vulnerabilities).reduce((a, b) => a + b, 0);
@@ -31,6 +34,12 @@ const Dashboard: React.FC = () => {
           <p className="text-muted-foreground">Monitor, protect, and optimize your applications with AI-powered insights</p>
         </div>
         <div className="flex gap-2">
+          <Link to="/github">
+            <Button variant="outline" size="sm">
+              <Github className="w-4 h-4 mr-2" />
+              GitHub Integration
+            </Button>
+          </Link>
           <Link to="/themes">
             <Button variant="outline" size="sm">
               <Palette className="w-4 h-4 mr-2" />
@@ -65,11 +74,13 @@ const Dashboard: React.FC = () => {
           <CardContent className="p-4">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm font-medium text-muted-foreground">Dependencies</p>
-                <p className="text-2xl font-bold text-foreground">{securityStatus.dependencies.outdated}</p>
+                <p className="text-sm font-medium text-muted-foreground">GitHub Repos</p>
+                <p className="text-2xl font-bold text-foreground">
+                  {isGitHubConnected ? selectedRepos.length : 0}
+                </p>
               </div>
-              <div className="p-2 bg-yellow-500/20 rounded-full">
-                <Clock className="w-6 h-6 text-yellow-500" />
+              <div className={`p-2 rounded-full ${isGitHubConnected ? 'bg-green-500/20' : 'bg-gray-500/20'}`}>
+                <Github className={`w-6 h-6 ${isGitHubConnected ? 'text-green-500' : 'text-gray-500'}`} />
               </div>
             </div>
           </CardContent>
@@ -103,6 +114,9 @@ const Dashboard: React.FC = () => {
           </CardContent>
         </Card>
       </div>
+
+      {/* PWA Install Banner */}
+      <InstallPWA />
 
       {/* Ad Placement Banner */}
       <AdPlacementBanner />
@@ -139,7 +153,7 @@ const Dashboard: React.FC = () => {
       </Tabs>
 
       {/* Navigation Links */}
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mt-8">
+      <div className="grid grid-cols-2 md:grid-cols-5 gap-4 mt-8">
         <Link to="/security" className="block">
           <Card className="panel hover:scale-105 transition-all cursor-pointer">
             <CardContent className="p-6 text-center">
@@ -166,6 +180,16 @@ const Dashboard: React.FC = () => {
               <Brain className="w-12 h-12 text-primary mx-auto mb-4" />
               <h3 className="text-lg font-semibold text-foreground">AI Insights</h3>
               <p className="text-sm text-muted-foreground">AI-powered analysis</p>
+            </CardContent>
+          </Card>
+        </Link>
+
+        <Link to="/github" className="block">
+          <Card className="panel hover:scale-105 transition-all cursor-pointer">
+            <CardContent className="p-6 text-center">
+              <Github className="w-12 h-12 text-primary mx-auto mb-4" />
+              <h3 className="text-lg font-semibold text-foreground">GitHub</h3>
+              <p className="text-sm text-muted-foreground">Repository integration</p>
             </CardContent>
           </Card>
         </Link>
