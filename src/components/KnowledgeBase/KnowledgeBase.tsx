@@ -88,7 +88,7 @@ const KnowledgeBase: React.FC = () => {
                     </div>
                     <div className="flex items-center gap-2">
                       {item.learned && (
-                        <Brain className="w-4 h-4 text-green-500" title="AI Generated" />
+                        <Brain className="w-4 h-4 text-green-500" />
                       )}
                       <span className="text-xs text-muted-foreground bg-muted/20 px-2 py-1 rounded">
                         {item.category}
