@@ -14,9 +14,9 @@ export const usePWA = () => {
           .then((registration) => {
             console.log('SW registered: ', registration);
             
-            // Enable background sync for backup operations
-            if ('sync' in window.ServiceWorkerRegistration.prototype) {
-              registration.sync.register('backup-sync');
+            // Enable background sync for backup operations if supported
+            if (registration.sync) {
+              registration.sync.register('backup-sync').catch(console.warn);
             }
           })
           .catch((registrationError) => {
@@ -33,10 +33,12 @@ export const usePWA = () => {
     // Listen for online/offline events
     const handleOnline = () => {
       setIsOffline(false);
-      // Trigger background sync when coming online
-      if ('serviceWorker' in navigator && 'sync' in window.ServiceWorkerRegistration.prototype) {
+      // Trigger background sync when coming online if supported
+      if ('serviceWorker' in navigator) {
         navigator.serviceWorker.ready.then(registration => {
-          registration.sync.register('backup-sync');
+          if (registration.sync) {
+            registration.sync.register('backup-sync').catch(console.warn);
+          }
         });
       }
     };

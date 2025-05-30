@@ -1,3 +1,4 @@
+
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
 import { useGitHub } from './GitHubContext';
 
@@ -19,7 +20,7 @@ interface ProjectBackup {
   compressed: boolean;
 }
 
-interface BackupContextType {
+export interface BackupContextType {
   changeLogs: ChangeLog[];
   backups: ProjectBackup[];
   storageUsage: number;
