@@ -1,12 +1,13 @@
 
 import React, { useState } from 'react';
+import { Link } from 'react-router-dom';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Shield, AlertTriangle, Play, Settings, Download, Key } from 'lucide-react';
+import { Shield, AlertTriangle, Play, Settings, Download, Key, ArrowLeft, Home } from 'lucide-react';
 import { useSecurity } from '../../contexts/SecurityContext';
 import { useToast } from '@/hooks/use-toast';
 
@@ -105,6 +106,24 @@ For detailed setup instructions, visit our documentation.
 
   return (
     <div className="space-y-6 animate-fade-in">
+      {/* Navigation Header */}
+      <div className="flex items-center gap-4 mb-6">
+        <Link to="/">
+          <Button variant="outline" size="sm">
+            <ArrowLeft className="w-4 h-4 mr-2" />
+            Back to Dashboard
+          </Button>
+        </Link>
+        <div className="text-sm text-muted-foreground">
+          <Link to="/" className="hover:text-foreground transition-colors">
+            <Home className="w-4 h-4 inline mr-1" />
+            Dashboard
+          </Link>
+          <span className="mx-2">/</span>
+          <span>Security Center</span>
+        </div>
+      </div>
+
       <div className="flex justify-between items-center">
         <div>
           <h1 className="text-4xl font-bold text-foreground mb-2">Security Center</h1>

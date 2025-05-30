@@ -1,7 +1,9 @@
+
 import React from 'react';
+import { Link } from 'react-router-dom';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Github, Shield, GitBranch, Settings } from 'lucide-react';
+import { Github, Shield, GitBranch, Settings, ArrowLeft, Home } from 'lucide-react';
 import GitHubAuthFlow from '../Auth/GitHubAuthFlow';
 import RepositorySelector from './RepositorySelector';
 import RepositoryScanner from './RepositoryScanner';
@@ -15,6 +17,24 @@ const GitHubDashboard: React.FC = () => {
   if (!isAuthenticated) {
     return (
       <div className="space-y-6 animate-fade-in">
+        {/* Navigation Header */}
+        <div className="flex items-center gap-4 mb-6">
+          <Link to="/">
+            <Button variant="outline" size="sm">
+              <ArrowLeft className="w-4 h-4 mr-2" />
+              Back to Dashboard
+            </Button>
+          </Link>
+          <div className="text-sm text-muted-foreground">
+            <Link to="/" className="hover:text-foreground transition-colors">
+              <Home className="w-4 h-4 inline mr-1" />
+              Dashboard
+            </Link>
+            <span className="mx-2">/</span>
+            <span>GitHub Integration</span>
+          </div>
+        </div>
+
         <div className="text-center space-y-4">
           <Github className="w-16 h-16 mx-auto text-muted-foreground" />
           <div>
@@ -33,6 +53,24 @@ const GitHubDashboard: React.FC = () => {
 
   return (
     <div className="space-y-6 animate-fade-in">
+      {/* Navigation Header */}
+      <div className="flex items-center gap-4 mb-6">
+        <Link to="/">
+          <Button variant="outline" size="sm">
+            <ArrowLeft className="w-4 h-4 mr-2" />
+            Back to Dashboard
+          </Button>
+        </Link>
+        <div className="text-sm text-muted-foreground">
+          <Link to="/" className="hover:text-foreground transition-colors">
+            <Home className="w-4 h-4 inline mr-1" />
+            Dashboard
+          </Link>
+          <span className="mx-2">/</span>
+          <span>GitHub Integration</span>
+        </div>
+      </div>
+
       <div className="flex justify-between items-center">
         <div>
           <h1 className="text-4xl font-bold text-foreground mb-2">GitHub Integration</h1>
