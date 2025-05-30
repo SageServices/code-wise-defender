@@ -3,17 +3,20 @@ import React, { useState, useRef, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { MessageSquare, Send, Bot, User } from 'lucide-react';
+import { ScrollArea } from '@/components/ui/scroll-area';
+import { Send, Bot, User, Copy, Download } from 'lucide-react';
 import { useAI } from '../../contexts/AIContext';
+import { useToast } from '@/hooks/use-toast';
 
 const AIChat: React.FC = () => {
   const { chatHistory, chatWithAI } = useAI();
+  const { toast } = useToast();
   const [message, setMessage] = useState('');
-  const [isTyping, setIsTyping] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
   const scrollToBottom = () => {
-    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
   };
 
   useEffect(() => {
@@ -21,14 +24,22 @@ const AIChat: React.FC = () => {
   }, [chatHistory]);
 
   const handleSendMessage = async () => {
-    if (!message.trim()) return;
+    if (!message.trim() || isLoading) return;
 
-    setIsTyping(true);
+    const currentMessage = message;
+    setMessage('');
+    setIsLoading(true);
+
     try {
-      await chatWithAI(message);
+      await chatWithAI(currentMessage);
+    } catch (error) {
+      toast({
+        title: "Chat Error",
+        description: "Failed to send message. Please try again.",
+        variant: "destructive",
+      });
     } finally {
-      setIsTyping(false);
-      setMessage('');
+      setIsLoading(false);
     }
   };
 
@@ -39,86 +50,143 @@ const AIChat: React.FC = () => {
     }
   };
 
+  const copyMessage = (content: string) => {
+    navigator.clipboard.writeText(content);
+    toast({
+      title: "Copied",
+      description: "Message copied to clipboard.",
+    });
+  };
+
+  const exportChatHistory = () => {
+    const chatData = {
+      timestamp: new Date().toISOString(),
+      messages: chatHistory.map(msg => ({
+        role: msg.role,
+        content: msg.content,
+        timestamp: msg.timestamp.toISOString()
+      }))
+    };
+
+    const blob = new Blob([JSON.stringify(chatData, null, 2)], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `chat-history-${new Date().toISOString().split('T')[0]}.json`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+
+    toast({
+      title: "Chat Exported",
+      description: "Chat history has been downloaded.",
+    });
+  };
+
   return (
     <Card className="panel h-[600px] flex flex-col">
-      <CardHeader>
-        <CardTitle className="flex items-center gap-2">
-          <MessageSquare className="w-5 h-5 text-primary" />
-          AI Chat Assistant
+      <CardHeader className="flex-shrink-0">
+        <CardTitle className="flex items-center justify-between">
+          <div className="flex items-center gap-2">
+            <Bot className="w-5 h-5 text-primary" />
+            AI Assistant
+          </div>
+          <Button onClick={exportChatHistory} variant="outline" size="sm">
+            <Download className="w-4 h-4" />
+          </Button>
         </CardTitle>
       </CardHeader>
-      <CardContent className="flex-1 flex flex-col p-4">
-        {/* Chat Messages */}
-        <div className="flex-1 overflow-y-auto space-y-4 mb-4">
-          {chatHistory.length === 0 ? (
-            <div className="text-center py-8">
-              <Bot className="w-12 h-12 text-muted-foreground mx-auto mb-4" />
-              <p className="text-muted-foreground">
-                Hi! I'm your AI assistant. I can help you with security questions, 
-                maintenance tasks, and provide insights about your system.
-              </p>
-            </div>
-          ) : (
-            chatHistory.map((chat, index) => (
+      
+      <CardContent className="flex-1 flex flex-col p-0">
+        <ScrollArea className="flex-1 p-4">
+          <div className="space-y-4">
+            {chatHistory.length === 0 && (
+              <div className="text-center text-muted-foreground py-8">
+                <Bot className="w-12 h-12 mx-auto mb-4 opacity-50" />
+                <p>Start a conversation with the AI assistant.</p>
+                <p className="text-sm mt-2">Ask about security, maintenance, or any technical questions.</p>
+              </div>
+            )}
+            
+            {chatHistory.map((chat, index) => (
               <div key={index} className={`flex ${chat.role === 'user' ? 'justify-end' : 'justify-start'}`}>
-                <div className={`flex items-start gap-2 max-w-[80%] ${chat.role === 'user' ? 'flex-row-reverse' : ''}`}>
-                  <div className={`p-2 rounded-full ${chat.role === 'user' ? 'bg-primary/20' : 'bg-muted/20'}`}>
-                    {chat.role === 'user' ? 
-                      <User className="w-4 h-4 text-primary" /> : 
-                      <Bot className="w-4 h-4 text-muted-foreground" />
-                    }
+                <div className={`flex gap-3 max-w-[80%] ${chat.role === 'user' ? 'flex-row-reverse' : 'flex-row'}`}>
+                  <div className={`flex-shrink-0 w-8 h-8 rounded-full flex items-center justify-center ${
+                    chat.role === 'user' ? 'bg-primary' : 'bg-secondary'
+                  }`}>
+                    {chat.role === 'user' ? (
+                      <User className="w-4 h-4 text-primary-foreground" />
+                    ) : (
+                      <Bot className="w-4 h-4 text-foreground" />
+                    )}
                   </div>
-                  <div className={`p-3 rounded-lg ${
+                  
+                  <div className={`rounded-lg p-3 ${
                     chat.role === 'user' 
                       ? 'bg-primary text-primary-foreground' 
-                      : 'bg-muted/20 text-foreground'
+                      : 'bg-background/50 border border-border'
                   }`}>
-                    <p className="text-sm">{chat.content}</p>
-                    <p className="text-xs opacity-70 mt-1">
-                      {chat.timestamp.toLocaleTimeString()}
-                    </p>
+                    <div className="whitespace-pre-wrap text-sm">{chat.content}</div>
+                    <div className="flex items-center justify-between mt-2 opacity-70">
+                      <span className="text-xs">
+                        {chat.timestamp.toLocaleTimeString()}
+                      </span>
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        className="h-6 w-6 p-0"
+                        onClick={() => copyMessage(chat.content)}
+                      >
+                        <Copy className="w-3 h-3" />
+                      </Button>
+                    </div>
                   </div>
                 </div>
               </div>
-            ))
-          )}
-          
-          {isTyping && (
-            <div className="flex justify-start">
-              <div className="flex items-start gap-2 max-w-[80%]">
-                <div className="p-2 rounded-full bg-muted/20">
-                  <Bot className="w-4 h-4 text-muted-foreground" />
-                </div>
-                <div className="p-3 rounded-lg bg-muted/20 text-foreground">
-                  <div className="flex space-x-1">
-                    <div className="w-2 h-2 bg-muted-foreground rounded-full animate-bounce"></div>
-                    <div className="w-2 h-2 bg-muted-foreground rounded-full animate-bounce" style={{ animationDelay: '0.1s' }}></div>
-                    <div className="w-2 h-2 bg-muted-foreground rounded-full animate-bounce" style={{ animationDelay: '0.2s' }}></div>
+            ))}
+            
+            {isLoading && (
+              <div className="flex justify-start">
+                <div className="flex gap-3 max-w-[80%]">
+                  <div className="flex-shrink-0 w-8 h-8 rounded-full bg-secondary flex items-center justify-center">
+                    <Bot className="w-4 h-4 text-foreground" />
+                  </div>
+                  <div className="rounded-lg p-3 bg-background/50 border border-border">
+                    <div className="flex items-center gap-2">
+                      <div className="animate-spin w-4 h-4 border border-primary border-t-transparent rounded-full"></div>
+                      <span className="text-sm text-muted-foreground">AI is thinking...</span>
+                    </div>
                   </div>
                 </div>
               </div>
-            </div>
-          )}
-          
-          <div ref={messagesEndRef} />
-        </div>
-
-        {/* Message Input */}
-        <div className="flex gap-2">
-          <Input
-            placeholder="Ask me anything about security, maintenance, or your system..."
-            value={message}
-            onChange={(e) => setMessage(e.target.value)}
-            onKeyPress={handleKeyPress}
-            disabled={isTyping}
-          />
-          <Button 
-            onClick={handleSendMessage} 
-            disabled={!message.trim() || isTyping}
-            className="px-3"
-          >
-            <Send className="w-4 h-4" />
-          </Button>
+            )}
+            
+            <div ref={messagesEndRef} />
+          </div>
+        </ScrollArea>
+        
+        <div className="border-t border-border p-4">
+          <div className="flex gap-2">
+            <Input
+              value={message}
+              onChange={(e) => setMessage(e.target.value)}
+              onKeyPress={handleKeyPress}
+              placeholder="Ask the AI assistant anything..."
+              disabled={isLoading}
+              className="flex-1"
+            />
+            <Button 
+              onClick={handleSendMessage} 
+              disabled={!message.trim() || isLoading}
+              size="sm"
+            >
+              <Send className="w-4 h-4" />
+            </Button>
+          </div>
+          <div className="text-xs text-muted-foreground mt-2">
+            Press Enter to send, Shift+Enter for new line
+          </div>
         </div>
       </CardContent>
     </Card>

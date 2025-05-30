@@ -1,113 +1,112 @@
 
 import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
+import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
-import { Wrench, Package, AlertCircle } from 'lucide-react';
-import { useSecurity } from '../../contexts/SecurityContext';
+import { Wrench, Package, RefreshCw, AlertTriangle } from 'lucide-react';
+import { Link } from 'react-router-dom';
 
 interface MaintenanceStatusCardProps {
   expanded?: boolean;
 }
 
 const MaintenanceStatusCard: React.FC<MaintenanceStatusCardProps> = ({ expanded = false }) => {
-  const { status, updateDependencies } = useSecurity();
-
-  const healthPercentage = Math.round(
-    ((status.dependencies.total - status.dependencies.outdated - status.dependencies.vulnerable) / status.dependencies.total) * 100
-  );
+  const maintenanceData = {
+    systemHealth: 92,
+    pendingUpdates: 8,
+    lastMaintenance: '2 hours ago',
+    nextScheduled: 'Tonight at 2:00 AM',
+    criticalTasks: 2
+  };
 
   return (
     <Card className="panel">
       <CardHeader>
-        <CardTitle className="flex items-center gap-2">
-          <Wrench className="w-5 h-5 text-primary" />
-          Maintenance Status
+        <CardTitle className="flex items-center justify-between">
+          <div className="flex items-center gap-2">
+            <Wrench className="w-5 h-5 text-primary" />
+            System Maintenance
+          </div>
+          {!expanded && (
+            <Link to="/maintenance">
+              <Button variant="outline" size="sm">View All</Button>
+            </Link>
+          )}
         </CardTitle>
       </CardHeader>
       <CardContent className="space-y-4">
-        {/* System Health */}
-        <div>
-          <div className="flex items-center justify-between mb-2">
-            <h4 className="text-sm font-medium text-muted-foreground">System Health</h4>
-            <Badge className={healthPercentage > 90 ? 'bg-green-500/20 text-green-500' : 'bg-yellow-500/20 text-yellow-500'}>
-              {healthPercentage}%
+        <div className="space-y-3">
+          <div className="flex items-center justify-between">
+            <span className="text-sm font-medium">System Health</span>
+            <Badge variant={maintenanceData.systemHealth > 90 ? "default" : "destructive"}>
+              {maintenanceData.systemHealth}%
             </Badge>
           </div>
-          <Progress value={healthPercentage} className="h-2" />
+          <Progress value={maintenanceData.systemHealth} className="h-2" />
         </div>
 
-        {/* Dependencies */}
-        <div>
-          <h4 className="text-sm font-medium text-muted-foreground mb-2">Dependencies</h4>
-          <div className="space-y-2">
-            <div className="flex items-center justify-between text-sm">
-              <span className="text-muted-foreground">Total</span>
-              <span className="text-foreground">{status.dependencies.total}</span>
+        <div className="grid grid-cols-2 gap-4">
+          <div className="text-center">
+            <div className="text-2xl font-bold text-yellow-500">
+              {maintenanceData.pendingUpdates}
             </div>
-            <div className="flex items-center justify-between text-sm">
-              <span className="text-muted-foreground">Outdated</span>
-              <Badge className={status.dependencies.outdated > 0 ? 'bg-yellow-500/20 text-yellow-500' : 'bg-green-500/20 text-green-500'}>
-                {status.dependencies.outdated}
-              </Badge>
+            <div className="text-xs text-muted-foreground">Pending Updates</div>
+          </div>
+          <div className="text-center">
+            <div className="text-2xl font-bold text-red-500">
+              {maintenanceData.criticalTasks}
             </div>
-            <div className="flex items-center justify-between text-sm">
-              <span className="text-muted-foreground">Vulnerable</span>
-              <Badge className={status.dependencies.vulnerable > 0 ? 'bg-red-500/20 text-red-500' : 'bg-green-500/20 text-green-500'}>
-                {status.dependencies.vulnerable}
-              </Badge>
-            </div>
+            <div className="text-xs text-muted-foreground">Critical Tasks</div>
           </div>
         </div>
 
         {expanded && (
-          <div className="space-y-4">
-            {/* Update Action */}
-            <Button 
-              onClick={updateDependencies} 
-              className="w-full"
-              disabled={status.dependencies.outdated === 0 && status.dependencies.vulnerable === 0}
-            >
-              <Package className="w-4 h-4 mr-2" />
-              Update Dependencies
-            </Button>
+          <div className="space-y-3">
+            <div className="p-3 bg-background/50 rounded-lg">
+              <div className="flex items-center justify-between mb-2">
+                <span className="text-sm font-medium">Dependencies</span>
+                <Package className="w-4 h-4 text-muted-foreground" />
+              </div>
+              <div className="text-xs text-muted-foreground">
+                {maintenanceData.pendingUpdates} packages need updating
+              </div>
+              <Button size="sm" className="mt-2 w-full">
+                <RefreshCw className="w-3 h-3 mr-1" />
+                Update All
+              </Button>
+            </div>
 
-            {/* Maintenance Recommendations */}
-            <div>
-              <h4 className="text-sm font-medium text-muted-foreground mb-2">Recommendations</h4>
-              <div className="space-y-2">
-                {status.dependencies.outdated > 0 && (
-                  <div className="flex items-start gap-2 p-2 bg-yellow-500/10 rounded border border-yellow-500/20">
-                    <AlertCircle className="w-4 h-4 text-yellow-500 mt-0.5 flex-shrink-0" />
-                    <div className="text-sm">
-                      <p className="text-foreground font-medium">Update outdated dependencies</p>
-                      <p className="text-muted-foreground">{status.dependencies.outdated} packages need updating</p>
-                    </div>
-                  </div>
-                )}
-                
-                {status.dependencies.vulnerable > 0 && (
-                  <div className="flex items-start gap-2 p-2 bg-red-500/10 rounded border border-red-500/20">
-                    <AlertCircle className="w-4 h-4 text-red-500 mt-0.5 flex-shrink-0" />
-                    <div className="text-sm">
-                      <p className="text-foreground font-medium">Security vulnerabilities detected</p>
-                      <p className="text-muted-foreground">{status.dependencies.vulnerable} vulnerable packages found</p>
-                    </div>
-                  </div>
-                )}
+            <div className="p-3 bg-background/50 rounded-lg">
+              <div className="flex items-center justify-between mb-2">
+                <span className="text-sm font-medium">Critical Issues</span>
+                <AlertTriangle className="w-4 h-4 text-red-500" />
+              </div>
+              <div className="text-xs text-muted-foreground">
+                {maintenanceData.criticalTasks} issues require immediate attention
+              </div>
+              <Button size="sm" variant="destructive" className="mt-2 w-full">
+                View Issues
+              </Button>
+            </div>
 
-                {status.dependencies.outdated === 0 && status.dependencies.vulnerable === 0 && (
-                  <div className="flex items-start gap-2 p-2 bg-green-500/10 rounded border border-green-500/20">
-                    <AlertCircle className="w-4 h-4 text-green-500 mt-0.5 flex-shrink-0" />
-                    <div className="text-sm">
-                      <p className="text-foreground font-medium">All dependencies up to date</p>
-                      <p className="text-muted-foreground">No maintenance required at this time</p>
-                    </div>
-                  </div>
-                )}
+            <div className="space-y-2 text-xs">
+              <div className="flex justify-between">
+                <span>Last Maintenance:</span>
+                <span className="text-muted-foreground">{maintenanceData.lastMaintenance}</span>
+              </div>
+              <div className="flex justify-between">
+                <span>Next Scheduled:</span>
+                <span className="text-muted-foreground">{maintenanceData.nextScheduled}</span>
               </div>
             </div>
+          </div>
+        )}
+
+        {!expanded && (
+          <div className="text-xs text-muted-foreground space-y-1">
+            <div>Last maintenance: {maintenanceData.lastMaintenance}</div>
+            <div>Next scheduled: {maintenanceData.nextScheduled}</div>
           </div>
         )}
       </CardContent>

@@ -2,88 +2,92 @@
 import React, { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
+import { Label } from '@/components/ui/label';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Palette, Download, Upload, RotateCcw } from 'lucide-react';
 import { useTheme } from '../../contexts/ThemeContext';
+import { useToast } from '@/hooks/use-toast';
 
 const ThemeCustomizer: React.FC = () => {
   const { currentTheme, customColors, setTheme, updateCustomColors } = useTheme();
-  const [selectedColor, setSelectedColor] = useState<string>('primary');
+  const { toast } = useToast();
 
   const presetThemes = [
-    { id: 'default', name: 'Default', preview: '#3b82f6' },
-    { id: 'cyberpunk', name: 'Cyberpunk', preview: '#a855f7' },
-    { id: 'ocean', name: 'Ocean', preview: '#0ea5e9' },
-    { id: 'forest', name: 'Forest', preview: '#10b981' }
+    { name: 'default', label: 'Dark Default', colors: { primary: '200 70% 50%', accent: '200 70% 30%' } },
+    { name: 'cyberpunk', label: 'Cyberpunk', colors: { primary: '300 100% 60%', accent: '60 100% 50%' } },
+    { name: 'ocean', label: 'Ocean Blue', colors: { primary: '200 80% 55%', accent: '190 70% 40%' } },
+    { name: 'forest', label: 'Forest Green', colors: { primary: '140 60% 45%', accent: '110 50% 35%' } }
   ];
 
   const colorOptions = [
-    { key: 'primary', label: 'Primary', description: 'Main brand color' },
-    { key: 'secondary', label: 'Secondary', description: 'Secondary elements' },
-    { key: 'accent', label: 'Accent', description: 'Highlights and accents' },
-    { key: 'background', label: 'Background', description: 'Main background' },
-    { key: 'foreground', label: 'Foreground', description: 'Text color' }
+    { key: 'background', label: 'Background' },
+    { key: 'foreground', label: 'Text' },
+    { key: 'primary', label: 'Primary' },
+    { key: 'secondary', label: 'Secondary' },
+    { key: 'accent', label: 'Accent' },
+    { key: 'muted', label: 'Muted' },
+    { key: 'border', label: 'Border' }
   ];
 
   const handleColorChange = (colorKey: string, value: string) => {
-    // Convert hex to HSL
-    const hsl = hexToHsl(value);
-    updateCustomColors({ [colorKey]: hsl });
-  };
-
-  const hexToHsl = (hex: string): string => {
-    // Simplified conversion - in production, use a proper color conversion library
-    const r = parseInt(hex.slice(1, 3), 16) / 255;
-    const g = parseInt(hex.slice(3, 5), 16) / 255;
-    const b = parseInt(hex.slice(5, 7), 16) / 255;
-
-    const max = Math.max(r, g, b);
-    const min = Math.min(r, g, b);
-    let h = 0, s = 0, l = (max + min) / 2;
-
-    if (max !== min) {
-      const d = max - min;
-      s = l > 0.5 ? d / (2 - max - min) : d / (max + min);
-      switch (max) {
-        case r: h = (g - b) / d + (g < b ? 6 : 0); break;
-        case g: h = (b - r) / d + 2; break;
-        case b: h = (r - g) / d + 4; break;
-      }
-      h /= 6;
-    }
-
-    return `${Math.round(h * 360)} ${Math.round(s * 100)}% ${Math.round(l * 100)}%`;
+    updateCustomColors({ [colorKey]: value });
   };
 
   const exportTheme = () => {
     const themeData = {
-      name: 'Custom Theme',
-      colors: customColors
+      name: currentTheme,
+      colors: customColors,
+      exported: new Date().toISOString()
     };
+
     const blob = new Blob([JSON.stringify(themeData, null, 2)], { type: 'application/json' });
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
     a.href = url;
-    a.download = 'theme.json';
+    a.download = `theme-${currentTheme}-${Date.now()}.json`;
+    document.body.appendChild(a);
     a.click();
+    document.body.removeChild(a);
     URL.revokeObjectURL(url);
+
+    toast({
+      title: "Theme Exported",
+      description: "Theme configuration has been downloaded.",
+    });
   };
 
   const importTheme = (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
-    if (file) {
-      const reader = new FileReader();
-      reader.onload = (e) => {
-        try {
-          const themeData = JSON.parse(e.target?.result as string);
+    if (!file) return;
+
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      try {
+        const themeData = JSON.parse(e.target?.result as string);
+        if (themeData.colors) {
           updateCustomColors(themeData.colors);
-        } catch (error) {
-          console.error('Invalid theme file');
+          toast({
+            title: "Theme Imported",
+            description: "Theme configuration has been applied.",
+          });
         }
-      };
-      reader.readAsText(file);
-    }
+      } catch (error) {
+        toast({
+          title: "Import Failed",
+          description: "Invalid theme file format.",
+          variant: "destructive",
+        });
+      }
+    };
+    reader.readAsText(file);
+  };
+
+  const resetToDefault = () => {
+    setTheme('default');
+    toast({
+      title: "Theme Reset",
+      description: "Theme has been reset to default.",
+    });
   };
 
   return (
@@ -93,148 +97,136 @@ const ThemeCustomizer: React.FC = () => {
           <h1 className="text-4xl font-bold text-foreground mb-2">Theme Customizer</h1>
           <p className="text-muted-foreground">Customize the appearance of your dashboard</p>
         </div>
-        <Badge className="bg-primary/20 text-primary">
-          Current: {currentTheme}
-        </Badge>
+        <div className="flex gap-2">
+          <Button onClick={exportTheme} variant="outline">
+            <Download className="w-4 h-4 mr-2" />
+            Export
+          </Button>
+          <Button onClick={resetToDefault} variant="outline">
+            <RotateCcw className="w-4 h-4 mr-2" />
+            Reset
+          </Button>
+        </div>
       </div>
 
       <Tabs defaultValue="presets" className="space-y-4">
         <TabsList className="grid w-full grid-cols-3">
           <TabsTrigger value="presets">Preset Themes</TabsTrigger>
           <TabsTrigger value="custom">Custom Colors</TabsTrigger>
-          <TabsTrigger value="export">Import/Export</TabsTrigger>
+          <TabsTrigger value="advanced">Advanced</TabsTrigger>
         </TabsList>
 
-        <TabsContent value="presets">
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+        <TabsContent value="presets" className="space-y-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             {presetThemes.map((theme) => (
               <Card 
-                key={theme.id} 
+                key={theme.name} 
                 className={`panel cursor-pointer transition-all hover:scale-105 ${
-                  currentTheme === theme.id ? 'ring-2 ring-primary' : ''
+                  currentTheme === theme.name ? 'ring-2 ring-primary' : ''
                 }`}
-                onClick={() => setTheme(theme.id)}
+                onClick={() => setTheme(theme.name)}
               >
-                <CardContent className="p-6 text-center">
-                  <div 
-                    className="w-16 h-16 rounded-full mx-auto mb-4"
-                    style={{ backgroundColor: theme.preview }}
-                  />
-                  <h3 className="text-lg font-semibold text-foreground">{theme.name}</h3>
-                  {currentTheme === theme.id && (
-                    <Badge className="mt-2 bg-primary/20 text-primary">Active</Badge>
-                  )}
+                <CardHeader>
+                  <CardTitle className="flex items-center justify-between">
+                    {theme.label}
+                    {currentTheme === theme.name && (
+                      <div className="w-3 h-3 bg-primary rounded-full"></div>
+                    )}
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="flex gap-2">
+                    <div 
+                      className="w-8 h-8 rounded border"
+                      style={{ backgroundColor: `hsl(${theme.colors.primary})` }}
+                    ></div>
+                    <div 
+                      className="w-8 h-8 rounded border"
+                      style={{ backgroundColor: `hsl(${theme.colors.accent})` }}
+                    ></div>
+                  </div>
                 </CardContent>
               </Card>
             ))}
           </div>
         </TabsContent>
 
-        <TabsContent value="custom" className="space-y-6">
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-            <Card className="panel">
-              <CardHeader>
-                <CardTitle>Color Settings</CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                {colorOptions.map((option) => (
-                  <div key={option.key} className="space-y-2">
-                    <div className="flex items-center justify-between">
-                      <div>
-                        <label className="text-sm font-medium text-foreground">
-                          {option.label}
-                        </label>
-                        <p className="text-xs text-muted-foreground">
-                          {option.description}
-                        </p>
-                      </div>
-                      <input
-                        type="color"
-                        className="w-12 h-8 rounded border border-border cursor-pointer"
-                        onChange={(e) => handleColorChange(option.key, e.target.value)}
-                      />
-                    </div>
-                  </div>
-                ))}
-              </CardContent>
-            </Card>
-
-            <Card className="panel">
-              <CardHeader>
-                <CardTitle>Preview</CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                <div className="p-4 bg-background border border-border rounded">
-                  <h4 className="text-foreground font-semibold mb-2">Sample Content</h4>
-                  <p className="text-muted-foreground text-sm mb-4">
-                    This is how your theme will look with the current settings.
-                  </p>
-                  <div className="flex gap-2">
-                    <Button size="sm">Primary Button</Button>
-                    <Button variant="outline" size="sm">Secondary</Button>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-          </div>
-        </TabsContent>
-
-        <TabsContent value="export">
+        <TabsContent value="custom" className="space-y-4">
           <Card className="panel">
             <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <Palette className="w-5 h-5" />
-                Theme Management
-              </CardTitle>
+              <CardTitle>Custom Color Palette</CardTitle>
             </CardHeader>
             <CardContent className="space-y-4">
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                <Button onClick={exportTheme} className="flex items-center gap-2">
-                  <Download className="w-4 h-4" />
-                  Export Theme
-                </Button>
-                
-                <div>
-                  <input
-                    type="file"
-                    accept=".json"
-                    onChange={importTheme}
-                    className="hidden"
-                    id="theme-import"
-                  />
-                  <Button 
-                    variant="outline" 
-                    className="w-full flex items-center gap-2"
-                    onClick={() => document.getElementById('theme-import')?.click()}
-                  >
-                    <Upload className="w-4 h-4" />
-                    Import Theme
-                  </Button>
-                </div>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                {colorOptions.map((option) => (
+                  <div key={option.key} className="space-y-2">
+                    <Label htmlFor={option.key}>{option.label}</Label>
+                    <div className="flex gap-2">
+                      <input
+                        id={option.key}
+                        type="text"
+                        value={customColors[option.key as keyof typeof customColors]}
+                        onChange={(e) => handleColorChange(option.key, e.target.value)}
+                        placeholder="0 0% 50%"
+                        className="flex-1 h-10 px-3 py-2 text-sm bg-background border border-input rounded-md"
+                      />
+                      <div 
+                        className="w-10 h-10 rounded border border-input"
+                        style={{ 
+                          backgroundColor: `hsl(${customColors[option.key as keyof typeof customColors]})` 
+                        }}
+                      ></div>
+                    </div>
+                    <p className="text-xs text-muted-foreground">
+                      HSL format: hue saturation% lightness%
+                    </p>
+                  </div>
+                ))}
+              </div>
+            </CardContent>
+          </Card>
+        </TabsContent>
 
-                <Button 
-                  variant="outline" 
-                  onClick={() => setTheme('default')}
-                  className="flex items-center gap-2"
-                >
-                  <RotateCcw className="w-4 h-4" />
-                  Reset to Default
-                </Button>
+        <TabsContent value="advanced" className="space-y-4">
+          <Card className="panel">
+            <CardHeader>
+              <CardTitle>Import/Export</CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div>
+                <Label htmlFor="importFile">Import Theme</Label>
+                <input
+                  id="importFile"
+                  type="file"
+                  accept=".json"
+                  onChange={importTheme}
+                  className="mt-2 block w-full text-sm text-muted-foreground file:mr-4 file:py-2 file:px-4 file:rounded-md file:border-0 file:text-sm file:font-medium file:bg-primary file:text-primary-foreground hover:file:bg-primary/80"
+                />
               </div>
 
-              <div className="p-4 bg-muted/20 rounded border border-border">
-                <h4 className="text-sm font-semibold text-foreground mb-2">Theme File Format</h4>
-                <pre className="text-xs text-muted-foreground overflow-auto">
-{`{
-  "name": "Custom Theme",
-  "colors": {
-    "background": "0 0% 10%",
-    "foreground": "0 0% 98%",
-    "primary": "200 70% 50%",
-    ...
-  }
-}`}
+              <div className="pt-4 border-t border-border">
+                <h4 className="font-medium mb-2">Current Theme Configuration</h4>
+                <pre className="text-xs bg-background/50 p-3 rounded border overflow-auto max-h-40">
+                  {JSON.stringify({ name: currentTheme, colors: customColors }, null, 2)}
                 </pre>
+              </div>
+            </CardContent>
+          </Card>
+
+          <Card className="panel">
+            <CardHeader>
+              <CardTitle>Live Preview</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-3">
+                <div className="p-4 bg-background border border-border rounded">
+                  <h5 className="font-medium text-foreground">Sample Content</h5>
+                  <p className="text-muted-foreground text-sm">This is how your theme looks.</p>
+                  <Button size="sm" className="mt-2">Primary Button</Button>
+                </div>
+                <div className="p-4 bg-secondary rounded">
+                  <p className="text-sm">Secondary background example</p>
+                </div>
               </div>
             </CardContent>
           </Card>
