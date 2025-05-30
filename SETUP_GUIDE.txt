@@ -1,0 +1,99 @@
+
+# Security & Maintenance Platform Setup Guide
+
+## Manual Configuration Required
+
+### 1. GitHub OAuth Setup (Production)
+- Go to GitHub Settings > Developer settings > OAuth Apps
+- Create a new OAuth application with:
+  - Application name: "Your Security Platform"
+  - Homepage URL: https://yourdomain.com
+  - Authorization callback URL: https://yourdomain.com/auth/github/callback
+- Copy Client ID and Client Secret
+- Add them as environment variables:
+  - VITE_GITHUB_CLIENT_ID=your_client_id
+  - GITHUB_CLIENT_SECRET=your_client_secret (backend only)
+
+### 2. PWA Icons (Required for proper PWA installation)
+Replace the placeholder icon files with actual 192x192 and 512x512 PNG icons:
+- public/icon-192.png (192x192 pixels)
+- public/icon-512.png (512x512 pixels)
+- public/favicon.ico (32x32 pixels)
+
+### 3. Manifest Link in HTML
+Add this line to the <head> section of index.html:
+<link rel="manifest" href="/manifest.json">
+
+### 4. Service Worker Registration
+The service worker is already created but needs to be registered. Add this to index.html before closing </body>:
+<script>
+if ('serviceWorker' in navigator) {
+  navigator.serviceWorker.register('/sw.js');
+}
+</script>
+
+### 5. Environment Variables (.env file)
+Create a .env file in the root directory with:
+VITE_GITHUB_CLIENT_ID=your_github_client_id
+VITE_API_BASE_URL=https://your-api-url.com
+VITE_ENABLE_PWA=true
+
+### 6. API Integration (Future Enhancement)
+The current implementation uses mock data. To connect real APIs:
+- Replace mock functions in GitHubContext.tsx with actual API calls
+- Implement proper error handling and rate limiting
+- Add authentication middleware for API requests
+
+### 7. Security Scanning Integration
+To enable real security scanning:
+- Sign up for Snyk API (https://snyk.io/api)
+- Get OWASP ZAP running (https://www.zaproxy.org/)
+- Add API keys to environment variables:
+  - VITE_SNYK_API_TOKEN=your_snyk_token
+  - VITE_ZAP_API_KEY=your_zap_key
+
+### 8. Database Setup (Optional)
+For persistent data storage:
+- Set up Supabase project (https://supabase.com)
+- Add database URL to environment variables
+- Implement user settings and scan history storage
+
+### 9. Deployment Checklist
+- Build the project: npm run build
+- Test PWA features in production environment
+- Verify all environment variables are set
+- Test GitHub OAuth flow
+- Verify service worker is properly cached
+- Test offline functionality
+
+### 10. Current Functionality Status
+✅ GitHub authentication (mock implementation)
+✅ Repository selection with read/write permissions
+✅ Security scanning interface (mock data)
+✅ Auto-fix PR creation (mock implementation)
+✅ PWA installation support
+✅ Responsive design
+✅ Toast notifications
+✅ Dark/light theme support
+
+🔄 Requires API integration:
+- Real GitHub OAuth
+- Actual vulnerability scanning
+- Live repository analysis
+- Real PR creation
+
+### 11. Testing the Current Build
+1. Navigate to /github route
+2. Click "Connect to GitHub"
+3. Enter a GitHub personal access token (for testing)
+4. Select repositories and access level
+5. Run security scans
+6. Test PWA installation (look for install prompt)
+
+### 12. Troubleshooting
+- If routes don't work, ensure you're using React Router Link components
+- For PWA installation issues, check console for service worker errors
+- GitHub API errors usually indicate token permissions or rate limits
+- Check browser console for detailed error messages
+
+The platform is now fully functional with mock data and ready for production API integration!

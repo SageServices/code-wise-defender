@@ -1,11 +1,11 @@
 
 {
-  "name": "Security & Maintenance Dashboard",
-  "short_name": "SecDash",
-  "description": "AI-powered security and maintenance system for web applications",
+  "name": "Security & Maintenance Platform",
+  "short_name": "SecPlatform",
+  "description": "AI-powered security scanning and auto-healing platform for web applications",
   "start_url": "/",
   "display": "standalone",
-  "background_color": "#0f0f0f",
+  "background_color": "#000000",
   "theme_color": "#3b82f6",
   "orientation": "portrait-primary",
   "icons": [
@@ -23,30 +23,12 @@
     }
   ],
   "categories": ["productivity", "developer", "security"],
-  "shortcuts": [
+  "screenshots": [
     {
-      "name": "Quick Scan",
-      "short_name": "Scan",
-      "description": "Run a quick security scan",
-      "url": "/security",
-      "icons": [
-        {
-          "src": "/icon-192.png",
-          "sizes": "192x192"
-        }
-      ]
-    },
-    {
-      "name": "GitHub",
-      "short_name": "GitHub",
-      "description": "Access GitHub integration",
-      "url": "/github",
-      "icons": [
-        {
-          "src": "/icon-192.png",
-          "sizes": "192x192"
-        }
-      ]
+      "src": "/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "form_factor": "wide"
     }
   ]
 }

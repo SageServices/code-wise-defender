@@ -28,13 +28,13 @@ const Index = () => {
             
             <div className="container mx-auto px-4 pt-6 pb-16 relative z-10">
               <Routes>
-                <Route path="/" element={<Dashboard />} />
-                <Route path="/security" element={<SecurityOverview />} />
-                <Route path="/maintenance" element={<MaintenancePanel />} />
-                <Route path="/ai-insights" element={<AIInsights />} />
-                <Route path="/knowledge" element={<KnowledgeBase />} />
-                <Route path="/themes" element={<ThemeCustomizer />} />
-                <Route path="/github" element={<GitHubDashboard />} />
+                <Route index element={<Dashboard />} />
+                <Route path="security" element={<SecurityOverview />} />
+                <Route path="maintenance" element={<MaintenancePanel />} />
+                <Route path="ai-insights" element={<AIInsights />} />
+                <Route path="knowledge" element={<KnowledgeBase />} />
+                <Route path="themes" element={<ThemeCustomizer />} />
+                <Route path="github" element={<GitHubDashboard />} />
               </Routes>
             </div>
             
