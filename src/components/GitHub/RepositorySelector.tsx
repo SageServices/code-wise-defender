@@ -6,7 +6,7 @@ import { Checkbox } from '@/components/ui/checkbox';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Repository, Search, Shield, Edit, Eye } from 'lucide-react';
+import { FolderGit2, Search, Shield, Edit, Eye } from 'lucide-react';
 import { useGitHub } from '../../contexts/GitHubContext';
 import { useToast } from '@/hooks/use-toast';
 
@@ -47,7 +47,7 @@ const RepositorySelector: React.FC = () => {
     <Card className="panel">
       <CardHeader>
         <CardTitle className="flex items-center gap-2">
-          <Repository className="w-5 h-5" />
+          <FolderGit2 className="w-5 h-5" />
           Repository Access
         </CardTitle>
       </CardHeader>
