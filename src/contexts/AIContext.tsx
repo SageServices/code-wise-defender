@@ -1,3 +1,4 @@
+
 import React, { createContext, useContext, useState, ReactNode } from 'react';
 
 interface AIInsight {
@@ -92,10 +93,24 @@ export const AIProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
     // Enhanced AI analysis with multiple models
     await new Promise(resolve => setTimeout(resolve, 3000));
     
-    const enhancedInsights = [
+    // Generate a random type that matches the union type
+    const randomValue = Math.random();
+    let insightType: 'security' | 'performance' | 'maintenance' | 'suggestion';
+    
+    if (randomValue > 0.75) {
+      insightType = 'security';
+    } else if (randomValue > 0.5) {
+      insightType = 'performance';
+    } else if (randomValue > 0.25) {
+      insightType = 'maintenance';
+    } else {
+      insightType = 'suggestion';
+    }
+    
+    const enhancedInsights: AIInsight[] = [
       {
         id: Date.now().toString(),
-        type: Math.random() > 0.7 ? 'security' : Math.random() > 0.5 ? 'performance' : 'maintenance',
+        type: insightType,
         title: 'AI-Generated Advanced Insight',
         description: 'Multi-model AI analysis has detected patterns requiring attention with high confidence.',
         confidence: Math.random() * 0.2 + 0.8,
