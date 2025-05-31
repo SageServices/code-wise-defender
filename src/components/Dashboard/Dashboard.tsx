@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -9,9 +8,13 @@ import { Shield, Wrench, Brain, Book, Palette, AlertTriangle, CheckCircle, Clock
 import { useSecurity } from '../../contexts/SecurityContext';
 import { useAI } from '../../contexts/AIContext';
 import { useGitHub } from '../../contexts/GitHubContext';
+import { useEnhancedAI } from '../../contexts/EnhancedAIContext';
 import SecurityStatusCard from '../Security/SecurityStatusCard';
 import MaintenanceStatusCard from '../Maintenance/MaintenanceStatusCard';
 import AIInsightsCard from '../AI/AIInsightsCard';
+import AICommandCenter from '../AI/AICommandCenter';
+import VoiceInteraction from '../AI/VoiceInteraction';
+import AISystemController from '../AI/AISystemController';
 import AdPlacementBanner from '../Ads/AdPlacementBanner';
 import QuickActions from './QuickActions';
 import InstallPWA from '../PWA/InstallPWA';
@@ -22,6 +25,7 @@ const Dashboard: React.FC = () => {
   const { status: securityStatus } = useSecurity();
   const { insights, isAnalyzing } = useAI();
   const { isAuthenticated, selectedRepos, user } = useGitHub();
+  const { hasOpenAIKey, aiStatus } = useEnhancedAI();
   const [activeTab, setActiveTab] = useState('overview');
   const [showAuthOverlay, setShowAuthOverlay] = useState(false);
   const [authTrigger, setAuthTrigger] = useState<string>('');
@@ -72,15 +76,18 @@ const Dashboard: React.FC = () => {
       <div className="flex justify-between items-center mb-8">
         <div>
           <h1 className="text-4xl font-bold text-foreground mb-2">
-            Security & Maintenance Dashboard
+            AI-Powered Security & Maintenance Dashboard
             {!isAuthenticated && (
               <Badge variant="outline" className="ml-3 text-xs">DEMO MODE</Badge>
+            )}
+            {!hasOpenAIKey && (
+              <Badge variant="secondary" className="ml-3 text-xs">AI LIMITED</Badge>
             )}
           </h1>
           <p className="text-muted-foreground">
             {isAuthenticated 
-              ? `Welcome back, ${user?.name || 'User'}! Monitor and protect your applications with AI-powered insights.`
-              : 'Monitor, protect, and optimize your applications with AI-powered insights'
+              ? `Welcome back, ${user?.name || 'User'}! Your AI assistant is ${aiStatus.toLowerCase()} and ready to help.`
+              : 'Experience next-generation AI-powered monitoring, voice control, and automated security management'
             }
           </p>
         </div>
@@ -110,6 +117,17 @@ const Dashboard: React.FC = () => {
           </Link>
         </div>
       </div>
+
+      {/* AI Command Center - Featured prominently */}
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-6">
+        <div className="lg:col-span-2">
+          <AICommandCenter />
+        </div>
+        <VoiceInteraction />
+      </div>
+
+      {/* AI System Controller */}
+      <AISystemController />
 
       {/* Quick Status Overview */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
@@ -190,8 +208,9 @@ const Dashboard: React.FC = () => {
 
       {/* Main Dashboard Tabs */}
       <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-4">
-        <TabsList className="grid w-full grid-cols-4">
+        <TabsList className="grid w-full grid-cols-5">
           <TabsTrigger value="overview">Overview</TabsTrigger>
+          <TabsTrigger value="ai-control">AI Control</TabsTrigger>
           <TabsTrigger value="security">Security</TabsTrigger>
           <TabsTrigger value="maintenance">Maintenance</TabsTrigger>
           <TabsTrigger value="insights">AI Insights</TabsTrigger>
@@ -203,6 +222,16 @@ const Dashboard: React.FC = () => {
             <MaintenanceStatusCard />
             <AIInsightsCard />
             <QuickActions onAuthRequired={handleAuthRequiredAction} />
+          </div>
+        </TabsContent>
+
+        <TabsContent value="ai-control" className="space-y-4">
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            <AICommandCenter />
+            <VoiceInteraction />
+            <div className="lg:col-span-2">
+              <AISystemController />
+            </div>
           </div>
         </TabsContent>
 
